@@ -23,6 +23,7 @@ from strategy1 import EqualWeightStrategy
 from strategy2 import VolatilityAdjustedStrategy
 from strategy3 import MomentumSelectionStrategy
 from strategy4 import MomentumRiskParityStrategy
+from strategy5 import CorrelationAwareMomentumRiskParityStrategy
 
 
 def setup_logging():
@@ -135,7 +136,8 @@ class AssetAllocationEngine:
             'equal_weight': EqualWeightStrategy(self.asset_universe),
             'volatility_adjusted': VolatilityAdjustedStrategy(self.asset_universe),
             'momentum_selection': MomentumSelectionStrategy(self.asset_universe),
-            'momentum_risk_parity': MomentumRiskParityStrategy(self.asset_universe)
+            'momentum_risk_parity': MomentumRiskParityStrategy(self.asset_universe),
+            'correlation_aware_momentum_risk_parity': CorrelationAwareMomentumRiskParityStrategy(self.asset_universe)
         }
         
         self.logger.info(f"Initialized {len(self.strategies)} strategies")
@@ -344,14 +346,15 @@ def run_single_strategy():
         '1': 'equal_weight',
         '2': 'volatility_adjusted', 
         '3': 'momentum_selection',
-        '4': 'momentum_risk_parity'
+        '4': 'momentum_risk_parity',
+        '5': 'correlation_aware_momentum_risk_parity'
     }
     
     print("Available strategies:")
     for key, strategy in strategies.items():
         print(f"  {key}. {strategy.replace('_', ' ').title()}")
     
-    choice = input("\nSelect strategy (1-4): ").strip()
+    choice = input("\nSelect strategy (1-5): ").strip()
     
     if choice not in strategies:
         print("Invalid choice. Using Strategy 1 (Equal Weight).")

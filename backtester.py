@@ -221,13 +221,13 @@ def run_backtests(returns_df: pd.DataFrame, path: str):
     
     # Define strategies to backtest
     strategies = {
-        "TC0.1_momentum_risk_parity": {
-            "portfolio_file": r"D:\Arsh\resolve-implementation\Portfolios\momentum_risk_parity_rebalance_history_long.csv ",
+        "TC0.1_correlation_aware_momentum_risk_parity": {
+            "portfolio_file": r"D:\Arsh\resolve-implementation\Portfolios\correlation_aware_momentum_risk_parity_rebalance_history_long.csv ",
             "transaction_cost_rate": 0.001,
             "base_value": 1000
         },
-        "TC0_momentum_risk_parity": {
-            "portfolio_file": r"D:\Arsh\resolve-implementation\Portfolios\momentum_risk_parity_rebalance_history_long.csv ",
+        "TC0_correlation_aware_momentum_risk_parity": {
+            "portfolio_file": r"D:\Arsh\resolve-implementation\Portfolios\correlation_aware_momentum_risk_parity_rebalance_history_long.csv ",
             "transaction_cost_rate": 0.000,
             "base_value": 1000
         }
@@ -345,7 +345,7 @@ def prepare_returns_df(price_df: pd.DataFrame) -> pd.DataFrame:
 
 if __name__ == "__main__":
     print("Starting main execution...")
-    price_file = r"D:\Arsh\resolve-implementation\Portfolios\momentum_risk_parity_rebalance_history_long.csv"
+    price_file = r"D:\Arsh\resolve-implementation\Portfolios\correlation_aware_momentum_risk_parity_rebalance_history_long.csv"
     print(f"\nLoading price data from: {price_file}")
     price_df = load_price_data(price_file)
     print(f"Price DataFrame shape: {price_df.shape}")
