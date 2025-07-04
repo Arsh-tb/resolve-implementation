@@ -1,26 +1,6 @@
-# ReSolve Adaptive Asset Allocation - Python Implementation
-# Core scientific computing
+pandas>=1.5.0
 numpy>=1.21.0
-pandas>=1.3.0
-scipy>=1.7.0
-
-# Optimization
-scikit-learn>=1.0.0
-
-# Data handling
-openpyxl>=3.0.0
-
-# Logging and utilities
-python-dateutil>=2.8.0
-
-# Optional: For enhanced data visualization (if needed)
 matplotlib>=3.5.0
 seaborn>=0.11.0
-
-# Optional: For Bloomberg API integration (if available)
-# blpapi>=3.18.0
-
-# Development and testing
-pytest>=6.0.0
-pytest-cov>=3.0.0
-
+scipy>=1.9.0
+scikit-learn>=1.1.0 

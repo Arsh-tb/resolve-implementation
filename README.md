@@ -1,358 +1,187 @@
-# ReSolve Adaptive Asset Allocation - Python Implementation
+# Asset Allocation Strategies
 
-A comprehensive Python implementation of the ReSolve Adaptive Asset Allocation methodology specifically adapted for Indian markets. This implementation follows the research paper "ReSolve Adaptive Asset Allocation: A Primer" and provides a complete backtesting and analysis framework.
+This package implements four different asset allocation strategies for Indian markets, providing daily signals with monthly rebalancing and portfolio weight outputs.
 
-## 🎯 Overview
+## Asset Universe
 
-This implementation provides:
+The strategies are designed for the following Indian market assets:
+- **NIFTY500**: Nifty 500 TRI (equity)
+- **NIFTY10YRGOVT**: 10-year G-Sec index (long-term bonds)
+- **NIFTY5YRGOVT**: 5-year G-Sec index (short-term bonds)
+- **GOLD**: Gold (MCX spot)
+- **SILVER**: Silver (MCX spot)
+- **CASH**: Cash/Debt instruments
 
-- **Complete ReSolve Methodology**: Multi-timeframe momentum calculation, risk-weighted optimization, and volatility targeting
-- **Indian Market Focus**: Asset universe covering Indian equities, bonds, REITs, and global diversification
-- **Professional Architecture**: Clean, modular design with proper abstractions and interfaces
-- **Comprehensive Backtesting**: Full backtesting engine with transaction costs and performance analysis
-- **Production Ready**: Extensible design for Bloomberg Terminal integration
+## Strategies
 
-## 📁 Project Structure
+### 1. Equal-Weight Portfolio (Monthly Rebalanced)
 
-```
-resolve_python_implementation/
-├── src/
-│   ├── core/
-│   │   ├── base.py              # Base classes and interfaces
-│   │   ├── momentum.py          # Momentum calculation implementations
-│   │   └── strategy.py          # Main strategy engine
-│   ├── data/
-│   │   └── provider.py          # Data provider with synthetic Indian market data
-│   ├── risk/
-│   │   └── calculator.py        # Risk metrics and volatility estimation
-│   ├── optimization/
-│   │   └── optimizer.py         # Portfolio optimization implementations
-│   └── analytics/
-│       └── backtest.py          # Backtesting engine and performance analysis
-├── config/                      # Configuration files
-├── data/                        # Data storage (raw and processed)
-├── results/                     # Backtest results and reports
-├── tests/                       # Unit tests
-├── main.py                      # Main execution script
-├── requirements.txt             # Python dependencies
-└── README.md                    # This file
-```
+**Concept**: Naïve baseline strategy that allocates equal capital weight to each asset class.
 
-## 🚀 Quick Start
+**Methodology**:
+- Each asset gets weight `w_i = 1/N` (for N assets)
+- Monthly rebalancing to restore equal weights
+- Daily weight drift tracking between rebalances
 
-### Installation
+**Key Features**:
+- Simple and diversified approach
+- No initial preference among asset types
+- Typically results in ~40% debt allocation (5Y + 10Y bonds)
 
-1. **Clone or extract the implementation**:
-   ```bash
-   cd resolve_python_implementation
-   ```
+### 2. Volatility-Adjusted Risk Parity (60-Day Inverse-Vol Weighting)
 
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+**Concept**: Allocates weights inversely proportional to each asset's volatility, aiming for equal risk contribution.
 
-3. **Run the demonstration**:
-   ```bash
-   python main.py
-   ```
+**Methodology**:
+- Uses 60-day rolling window for volatility calculation
+- Weights calculated as `w_i = (1/σ_i) / Σ(1/σ_j)`
+- Monthly rebalancing to incorporate new volatility data
 
-### Basic Usage
+**Key Features**:
+- Balances risk across portfolio
+- Overweights lower-volatility assets (bonds)
+- Underweights higher-volatility assets (equities, commodities)
 
-```python
-from src.core.base import StrategyConfiguration, AssetUniverse, Asset
-from src.data.provider import IndianMarketDataProvider
-from src.core.strategy import ResolveStrategyEngine
-from src.analytics.backtest import ResolveBacktestEngine
-from datetime import datetime, timedelta
+### 3. Momentum-Based Selection (6-Month Return Momentum Strategy)
 
-# Create asset universe
-assets = [
-    Asset("NIFTY50", "Nifty 50 Index", "equity", "India"),
-    Asset("NIFTY10YRGOVT", "Nifty 10 Year Government Bond Index", "fixed_income", "India"),
-    # ... more assets
-]
-asset_universe = AssetUniverse(assets)
+**Concept**: Dynamically selects assets based on recent performance, holding trending assets.
 
-# Configure strategy
-config = StrategyConfiguration(
-    target_volatility=0.10,
-    momentum_lookback_periods=[1, 3, 6, 9, 12],
-    rebalancing_frequency='monthly'
-)
+**Methodology**:
+- Calculates 6-month returns for all assets
+- Selects assets with above-average momentum
+- Equal weights among selected assets
+- Non-selected assets allocated to safe debt
 
-# Initialize components
-data_provider = IndianMarketDataProvider()
-strategy_engine = ResolveStrategyEngine(data_provider, asset_universe, config)
+**Key Features**:
+- Captures momentum effect
+- Can rotate between asset classes
+- Maintains significant debt allocation when momentum is weak
 
-# Calculate current allocation
-current_weights = strategy_engine.calculate_target_weights(datetime.now())
+### 4. Momentum + Risk Parity Hybrid
 
-# Run backtest
-backtest_engine = ResolveBacktestEngine(strategy_engine)
-results = backtest_engine.run_backtest(
-    start_date=datetime(2020, 1, 1),
-    end_date=datetime(2023, 12, 31)
-)
-```
+**Concept**: Combines momentum selection with volatility weighting for optimal risk-adjusted returns.
 
-## 🏗️ Architecture
+**Methodology**:
+- Step 1: Select assets with above-average 6-month momentum
+- Step 2: Apply inverse-volatility weighting to selected assets
+- Monthly rebalancing for both momentum and volatility updates
 
-### Core Components
+**Key Features**:
+- Best of both worlds: momentum offense + risk parity defense
+- Expected superior risk-adjusted performance
+- Dynamic asset selection with risk control
 
-1. **Strategy Engine** (`src/core/strategy.py`)
-   - Main orchestrator implementing the complete ReSolve methodology
-   - Coordinates momentum calculation, risk estimation, and portfolio optimization
-   - Handles rebalancing logic and volatility targeting
-
-2. **Momentum Calculator** (`src/core/momentum.py`)
-   - Time-series momentum calculation
-   - Cross-sectional momentum ranking
-   - Combined momentum approach with configurable weighting
-
-3. **Risk Calculator** (`src/risk/calculator.py`)
-   - Volatility estimation (simple, EWM, GARCH)
-   - Correlation matrix calculation
-   - Comprehensive risk metrics (VaR, Sharpe, Sortino, etc.)
-
-4. **Portfolio Optimizer** (`src/optimization/optimizer.py`)
-   - Mean-variance optimization with momentum signals
-   - Risk parity optimization
-   - Volatility targeting and leverage adjustment
-
-5. **Data Provider** (`src/data/provider.py`)
-   - Synthetic Indian market data generation
-   - Extensible interface for Bloomberg Terminal integration
-   - Realistic price dynamics and correlations
-
-6. **Backtesting Engine** (`src/analytics/backtest.py`)
-   - Historical simulation with look-ahead bias prevention
-   - Transaction cost modeling
-   - Comprehensive performance analysis and reporting
-
-### Design Principles
-
-- **Interface-Based Design**: All major components implement interfaces for easy testing and extension
-- **Separation of Concerns**: Clear separation between data, calculation, optimization, and analysis
-- **Configurability**: Extensive configuration options without code changes
-- **Extensibility**: Easy to add new assets, optimization methods, or data sources
-- **Production Ready**: Proper error handling, logging, and validation
-
-## 📊 Asset Universe
-
-The implementation includes a comprehensive Indian market asset universe:
-
-### Indian Equities
-- **NIFTY50**: Nifty 50 Index
-- **NIFTYNEXT50**: Nifty Next 50 Index
-- **NIFTYMIDCAP**: Nifty Midcap 150 Index
-- **NIFTYSMALLCAP**: Nifty Smallcap 250 Index
-
-### Indian Fixed Income
-- **NIFTY10YRGOVT**: Nifty 10 Year Government Bond Index
-- **NIFTYCORPBOND**: Nifty Corporate Bond Index
-- **NIFTYGSEC**: Nifty Government Securities Index
-
-### Indian Real Estate
-- **NIFTYREIT**: Nifty REIT Index
-- **NIFTYREALTY**: Nifty Realty Index
-
-### Global Diversification
-- **MSCIWORLD**: MSCI World Index (INR hedged)
-- **MSCIEM**: MSCI Emerging Markets Index (INR hedged)
-- **GOLD**: Gold (INR)
-- **CRUDE**: Crude Oil (INR)
-
-### Currency
-- **USDINR**: USD/INR Exchange Rate
-
-## ⚙️ Configuration
-
-### Strategy Parameters
-
-```python
-StrategyConfiguration(
-    target_volatility=0.10,              # 10% target volatility
-    momentum_lookback_periods=[1,3,6,9,12], # Momentum periods in months
-    rebalancing_frequency='monthly',      # Rebalancing frequency
-    minimum_weight=0.0,                   # Minimum asset weight
-    maximum_weight=0.25,                  # Maximum asset weight (25%)
-    transaction_cost=0.001                # Transaction cost (0.1%)
-)
-```
-
-### Customizable Components
-
-- **Momentum Calculation**: Time-series, cross-sectional, or combined
-- **Risk Estimation**: Simple, exponentially weighted, or GARCH volatility
-- **Optimization Method**: Mean-variance, risk parity, or momentum-weighted
-- **Rebalancing Frequency**: Daily, weekly, monthly, quarterly, or annual
-
-## 📈 Performance Analysis
-
-The backtesting engine provides comprehensive performance metrics:
-
-### Return Metrics
-- Total Return
-- Annualized Return
-- Volatility
-- Sharpe Ratio
-- Sortino Ratio
-- Calmar Ratio
-
-### Risk Metrics
-- Maximum Drawdown
-- Value at Risk (95%, 99%)
-- Win Rate
-- Tracking Error
-- Information Ratio
-
-### Transaction Analysis
-- Total Transaction Costs
-- Number of Rebalances
-- Turnover Analysis
-
-## 🔌 Bloomberg Integration
-
-For production use with real data, extend the `IDataProvider` interface:
-
-```python
-class BloombergDataProvider(IDataProvider):
-    def __init__(self, session):
-        self.session = session  # Bloomberg API session
-    
-    def get_price_data(self, symbol, start_date, end_date):
-        # Implement Bloomberg API calls
-        # Required fields: PX_OPEN, PX_HIGH, PX_LOW, PX_LAST, PX_VOLUME
-        pass
-```
-
-### Required Bloomberg Tickers
-
-Map the asset symbols to Bloomberg tickers:
-- `NIFTY50` → `NIFTY Index`
-- `NIFTY10YRGOVT` → `NIFTY10YR Index`
-- `GOLD` → `GOLDS Comdty` (INR adjusted)
-- etc.
-
-## 🧪 Testing
-
-Run the test suite:
+## Installation
 
 ```bash
-pytest tests/ -v --cov=src
+pip install -r requirements.txt
 ```
 
-## 📝 Example Output
+## Usage
 
-```
-ReSolve Adaptive Asset Allocation - Indian Markets Implementation
-================================================================================
-
-Asset Universe: 14 assets
-Target Volatility: 10.0%
-Momentum Periods: [1, 3, 6, 9, 12] months
-
-CURRENT TARGET ALLOCATION:
---------------------------------------------------
-NIFTY50         Nifty 50 Index                    18.45%
-GOLD            Gold (INR)                        15.23%
-NIFTY10YRGOVT   Nifty 10 Year Government Bond     12.67%
-MSCIWORLD       MSCI World Index (INR)            11.89%
-...
-
-BACKTEST RESULTS:
-------------------------------
-Total Return: 12.45%
-Annualized Return: 11.23%
-Volatility: 9.87%
-Sharpe Ratio: 0.847
-Maximum Drawdown: -8.23%
-```
-
-## 🔧 Customization
-
-### Adding New Assets
+### Running All Strategies
 
 ```python
-new_asset = Asset(
-    symbol="NEWASSET",
-    name="New Asset Name",
-    asset_type="equity",  # equity, fixed_income, commodity, etc.
-    region="India"
-)
-asset_universe.add_asset(new_asset)
+from asset_allocation.main import main
+
+# Run comparison of all strategies
+main()
 ```
 
-### Custom Optimization
+### Running Single Strategy
 
 ```python
-class CustomOptimizer(IPortfolioOptimizer):
-    def optimize_weights(self, expected_returns, covariance_matrix, constraints):
-        # Implement custom optimization logic
-        pass
+from asset_allocation.main import run_single_strategy
+
+# Run individual strategy with user input
+run_single_strategy()
 ```
 
-### Custom Risk Models
+### Direct Strategy Usage
 
 ```python
-class CustomRiskCalculator(IRiskCalculator):
-    def calculate_volatility(self, returns, window):
-        # Implement custom volatility estimation
-        pass
+from asset_allocation.strategy1 import EqualWeightStrategy
+from asset_allocation.strategy2 import VolatilityAdjustedStrategy
+from asset_allocation.strategy3 import MomentumSelectionStrategy
+from asset_allocation.strategy4 import MomentumRiskParityStrategy
+
+# Initialize strategy
+strategy = EqualWeightStrategy(asset_universe=['NIFTY500', 'NIFTY10YRGOVT', 'GOLD'])
+
+# Calculate target weights
+weights = strategy.calculate_target_weights(current_date, historical_data)
+
+# Get daily signals
+signals = strategy.get_daily_signals(current_date, historical_data)
 ```
 
-## 📚 Research Background
+## Output Format
 
-This implementation is based on the ReSolve Asset Management research paper:
-**"ReSolve Adaptive Asset Allocation: A Primer"**
+Each strategy provides:
+- **Daily Signals**: Portfolio weights for each trading day
+- **Monthly Rebalancing**: Target weights updated monthly
+- **Portfolio Weights**: Dictionary mapping asset symbols to weights (0.0 to 1.0)
 
-### Key Methodology Components
+Example output:
+```python
+{
+    'NIFTY500': 0.20,      # 20% allocation
+    'NIFTY10YRGOVT': 0.30, # 30% allocation
+    'NIFTY5YRGOVT': 0.25,  # 25% allocation
+    'GOLD': 0.15,          # 15% allocation
+    'SILVER': 0.10,        # 10% allocation
+    'CASH': 0.00           # 0% allocation
+}
+```
 
-1. **Multi-Timeframe Momentum**: Uses 1, 3, 6, 9, and 12-month lookback periods
-2. **Risk-Weighted Optimization**: Combines momentum signals with mean-variance optimization
-3. **Volatility Targeting**: Dynamically adjusts leverage to maintain target volatility
-4. **Transaction Cost Awareness**: Incorporates realistic transaction costs in optimization
+## Data Requirements
 
-### Adaptations for Indian Markets
+For production use, connect to Bloomberg Terminal with:
 
-- **Asset Universe**: Focused on Indian equity indices, bonds, and REITs
-- **Risk-Free Rate**: Uses 6.5% (typical Indian government bond yield)
-- **Currency Hedging**: Global assets are INR-hedged
-- **Market Characteristics**: Accounts for Indian market volatility and correlation patterns
+**Required Bloomberg Fields**:
+- PX_LAST (Last Price)
+- PX_OPEN (Open Price)
+- PX_HIGH (High Price)
+- PX_LOW (Low Price)
+- PX_VOLUME (Volume)
 
-## 🤝 Contributing
+**Required Tickers**:
+- NIFTY500: Nifty 500 TRI
+- NIFTY10YRGOVT: Nifty 10 Year Government Bond Index
+- NIFTY5YRGOVT: Nifty 5 Year Government Bond Index
+- GOLD: Gold MCX Spot
+- SILVER: Silver MCX Spot
 
-To extend or modify the implementation:
+**Data Specifications**:
+- Historical Data: Minimum 2 years of daily data
+- Update Frequency: Daily (end of day)
+- Currency: All prices in INR
 
-1. Follow the interface-based design patterns
-2. Add comprehensive unit tests for new components
-3. Update documentation for new features
-4. Ensure backward compatibility
+## Key Features
 
-## 📄 License
+- **Modular Design**: Each strategy is implemented as a separate class
+- **Type Annotations**: Full type hints for better code quality
+- **Comprehensive Logging**: Detailed logging for debugging and monitoring
+- **Error Handling**: Robust error handling with fallbacks
+- **Documentation**: Google-style docstrings for all methods
+- **Testing Ready**: Designed for easy unit testing
 
-This implementation is provided for educational and research purposes. Please ensure compliance with any applicable licenses for the underlying research methodology.
+## Performance Considerations
 
-## 🆘 Support
+- **Volatility Calculation**: Uses rolling windows for efficient computation
+- **Memory Management**: Optimized for large historical datasets
+- **Rebalancing Logic**: Efficient monthly rebalancing detection
+- **Weight Drift Tracking**: Monitors portfolio drift between rebalances
 
-For questions or issues:
+## Extensions
 
-1. Check the comprehensive logging output in `resolve_strategy.log`
-2. Review the generated backtest reports for detailed analysis
-3. Examine the CSV output files for raw data
+The framework is designed for easy extension:
+- Add new strategies by implementing the same interface
+- Modify asset universe for different markets
+- Adjust rebalancing frequencies
+- Add correlation-based optimizations
+- Implement transaction cost modeling
 
-## 🔮 Future Enhancements
+## License
 
-Potential areas for extension:
-
-- **Machine Learning Integration**: ML-based momentum signals
-- **Alternative Risk Models**: Factor models, regime-aware risk estimation
-- **Multi-Currency Support**: Dynamic currency hedging
-- **Real-Time Execution**: Live trading integration
-- **Advanced Analytics**: Attribution analysis, scenario testing
-
----
-
-**Note**: This implementation uses synthetic data for demonstration. For production use, integrate with Bloomberg Terminal or other professional data providers for accurate historical and real-time market data.
-
+This project is licensed under the MIT License. 

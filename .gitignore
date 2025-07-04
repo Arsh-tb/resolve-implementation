@@ -1,0 +1,6 @@
+/Input_data
+*.csv
+*.pyc
+*.xlsx
+*.log
+Portfolios/final_result/Asset_allocation_monthly.html
