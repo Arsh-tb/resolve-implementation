@@ -43,7 +43,8 @@ class CorrelationAwareMomentumRiskParityStrategy:
         self.asset_universe = asset_universe
         self.logger = logging.getLogger(__name__)
         self.lookback_period = 252  # ~1 year for momentum calculation
-        self.volatility_window = 60  # 60 days for volatility and correlation
+        self.volatility_window = 60  # 60 days for volatility calculation
+        self.covariance_window = 252  # 252 days for covariance matrix calculation
         self.min_selected_assets = 2  # Minimum assets to select for ERC
         
         self.logger.info(f"Initialized Correlation-Aware Momentum + Risk Parity Strategy with {len(asset_universe)} assets")
@@ -139,7 +140,8 @@ class CorrelationAwareMomentumRiskParityStrategy:
                                   historical_data: pd.DataFrame,
                                   selected_assets: List[str]) -> np.ndarray:
         """
-        Calculate covariance matrix for selected assets using rolling window.
+        Calculate covariance matrix for selected assets using 252-day rolling window.
+        Note: This uses a separate window from volatility calculations (which use 60 days).
         
         Args:
             current_date: Current date for calculation
@@ -155,11 +157,11 @@ class CorrelationAwareMomentumRiskParityStrategy:
         # Get data up to current date
         data_slice = historical_data[historical_data.index <= current_date]
         
-        # Get the last volatility_window days
-        if len(data_slice) < self.volatility_window:
+        # Get the last covariance_window days for covariance calculation
+        if len(data_slice) < self.covariance_window:
             data_slice = data_slice
         else:
-            data_slice = data_slice.iloc[-self.volatility_window:]
+            data_slice = data_slice.iloc[-self.covariance_window:]
         
         # Calculate daily returns for selected assets
         returns_data = {}
@@ -380,6 +382,7 @@ class CorrelationAwareMomentumRiskParityStrategy:
             'rebalancing': 'Monthly',
             'lookback_momentum': '6 months (180 days)',
             'lookback_volatility': '60 days',
+            'lookback_covariance': '252 days (1 year)',
             'risk_model': 'Equal Risk Contribution with correlation matrix',
             'safe_assets': 'None - all weight distributed among selected assets'
         }
